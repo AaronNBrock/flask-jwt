@@ -19,10 +19,6 @@ users = [
 username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
 
-def authenticate(username, password):
-    user = username_table.get(username, None)
-    if user and safe_str_cmp(user.password.encode('utf-8'), password.encode('utf-8')):
-        return user
 
 def identity(payload):
     user_id = payload['identity']
@@ -32,7 +28,14 @@ app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
 
-jwt = JWT(app, authenticate, identity)
+jwt = JWT(app, identity_handler=identity)
+
+@jwt.authentication_handler
+def authenticate(username, password, **kwargs):
+    user = username_table.get(username, None)
+    if user and safe_str_cmp(user.password.encode('utf-8'), password.encode('utf-8')):
+        return user
+
 
 @app.route('/protected')
 @jwt_required()
@@ -40,4 +43,4 @@ def protected():
     return '%s' % current_identity
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='localhost')

@@ -116,14 +116,10 @@ def _default_auth_request_handler():
     if not isinstance(data, dict):  # Strings/arrays, or non-JSON mimetype
         raise JWTError('Bad Request', 'Credentials must supplied in JSON')
 
-    username = data.get(current_app.config.get('JWT_AUTH_USERNAME_KEY'))
-    password = data.get(current_app.config.get('JWT_AUTH_PASSWORD_KEY'))
-    criterion = [username, password, len(data) == 2]
-
-    if not all(criterion):
+    try:
+        identity = _jwt.authentication_callback(**data)
+    except TypeError:
         raise JWTError('Bad Request', 'Invalid credentials')
-
-    identity = _jwt.authentication_callback(username, password)
 
     if identity:
         access_token = _jwt.jwt_encode_callback(identity)
