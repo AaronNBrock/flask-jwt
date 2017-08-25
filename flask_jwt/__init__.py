@@ -119,7 +119,7 @@ def _default_auth_request_handler():
     try:
         identity = _jwt.authentication_callback(**data)
     except TypeError:
-        raise JWTError('Bad Request', 'Invalid credentials')
+        raise JWTError('Bad Request', 'Invalid credentials arguments')
 
     if identity:
         access_token = _jwt.jwt_encode_callback(identity)
@@ -253,10 +253,10 @@ class JWT(object):
         endpoint = app.config.get('JWT_AUTH_ENDPOINT', None)
 
         if auth_url_rule and endpoint:
-            if self.auth_request_callback == _default_auth_request_handler:
-                assert self.authentication_callback is not None, (
-                    'an authentication_handler function must be defined when using the built in '
-                    'authentication resource')
+            # if self.auth_request_callback == _default_auth_request_handler:
+            #     assert self.authentication_callback is not None, (
+            #         'an authentication_handler function must be defined when using the built in '
+            #         'authentication resource')
 
             auth_url_options = app.config.get('JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
             auth_url_options.setdefault('view_func', self.auth_request_callback)

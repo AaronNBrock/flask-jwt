@@ -20,15 +20,18 @@ username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
 
 
-def identity(payload):
-    user_id = payload['identity']
-    return userid_table.get(user_id, None)
-
 app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
 
-jwt = JWT(app, identity_handler=identity)
+jwt = JWT(app)
+
+
+@jwt.identity_handler
+def identity(payload):
+    user_id = payload['identity']
+    return userid_table.get(user_id, None)
+
 
 @jwt.authentication_handler
 def authenticate(username, password, **kwargs):
