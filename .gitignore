@@ -21,14 +21,17 @@ pip-log.txt
 .coverage
 .tox
 
-#Translations
+# Translations
 *.mo
 
 
-#Virtualenv
+# Virtualenv
 env/
 
-#Editor temporaries
+# Editor temporaries
 *~
 
 *.db
+
+# PyCharm
+.idea
