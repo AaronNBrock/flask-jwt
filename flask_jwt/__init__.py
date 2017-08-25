@@ -62,7 +62,7 @@ def _default_jwt_encode_handler(identity):
     missing_claims = list(set(required_claims) - set(payload.keys()))
 
     if missing_claims:
-        raise RuntimeError('Payload is missing required claims: %s' % ', '.join(missing_claims))
+        raise RuntimeError('Payload is missing required claims: {}'.format(', '.join(missing_claims)))
 
     headers = _jwt.jwt_headers_callback(identity)
 
@@ -88,8 +88,7 @@ def _default_jwt_decode_handler(token):
         for claim in ['exp', 'nbf', 'iat']
     })
 
-    return jwt.decode(token, secret, options=options, algorithms=[algorithm], leeway=leeway,
-                      audience=audience)
+    return jwt.decode(token, secret, options=options, algorithms=[algorithm], leeway=leeway, audience=audience)
 
 
 def _default_request_handler():
@@ -165,7 +164,7 @@ def _jwt_required(realm, roles):
 
     if token is None:
         raise JWTError('Authorization Required', 'Request does not contain an access token',
-                       headers={'WWW-Authenticate': 'JWT realm="%s"' % realm})
+                       headers={'WWW-Authenticate': 'JWT realm="{}"'.format(realm)})
 
     try:
         payload = _jwt.jwt_decode_callback(token)
@@ -216,10 +215,10 @@ class JWTError(Exception):
         self.headers = headers
 
     def __repr__(self):
-        return 'JWTError: %s' % self.error
+        return 'JWTError: {}'.format(self.error)
 
     def __str__(self):
-        return '%s. %s' % (self.error, self.description)
+        return '{}. {}'.format(self.error, self.description)
 
 
 def encode_token():

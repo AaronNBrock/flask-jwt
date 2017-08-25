@@ -9,7 +9,7 @@ class User(object):
         self.password = password
 
     def __str__(self):
-        return "User(id='%s')" % self.id
+        return "User(id='{}')".format(self.id)
 
 users = [
     User(1, 'user1', 'abcxyz'),
@@ -43,7 +43,7 @@ def authenticate(username, password, **kwargs):
 @app.route('/protected')
 @jwt_required()
 def protected():
-    return '%s' % current_identity
+    return '{}'.format(current_identity)
 
 if __name__ == '__main__':
     app.run(host='localhost')
