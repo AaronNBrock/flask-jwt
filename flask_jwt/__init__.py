@@ -175,11 +175,22 @@ def _default_jwt_required_handler(*args, **kwargs):
     else:
         roles = None
 
+    if 2 < len(args):
+        soft = args[1]
+    elif 'soft' in kwargs:
+        soft = kwargs['soft']
+    else:
+        soft = False
+
     token = _jwt.request_callback()
 
     if token is None:
-        raise JWTError('Authorization Required', 'Request does not contain an access token',
-                       headers={'WWW-Authenticate': 'JWT realm="{}"'.format(realm)})
+        if soft:
+            _request_ctx_stack.top.current_identity = identity = None
+            return
+        else:
+            raise JWTError('Authorization Required', 'Request does not contain an access token',
+                           headers={'WWW-Authenticate': 'JWT realm="{}"'.format(realm)})
 
     try:
         payload = _jwt.jwt_decode_callback(token)
