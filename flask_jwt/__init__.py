@@ -186,6 +186,7 @@ def _default_jwt_required_handler(*args, **kwargs):
 
     if token is None:
         if soft:
+            _jwt.current_identity = None
             _request_ctx_stack.top.current_identity = identity = None
             return
         else:
@@ -197,7 +198,8 @@ def _default_jwt_required_handler(*args, **kwargs):
     except jwt.InvalidTokenError as e:
         raise JWTError('Invalid token', str(e))
 
-    _request_ctx_stack.top.current_identity = identity = _jwt.identity_callback(payload)
+    _jwt.current_identity = _jwt.identity_callback(payload)
+    _request_ctx_stack.top.current_identity = identity = _jwt.current_identity
 
     if identity is None:
         raise JWTError('Invalid JWT', 'User does not exist')
@@ -261,8 +263,9 @@ class JWT(object):
         self.jwt_payload_callback = _default_jwt_payload_handler
         self.jwt_error_callback = _default_jwt_error_handler
         self.request_callback = _default_request_handler
-
         self.jwt_required_callback = _default_jwt_required_handler
+
+        self.current_identity = None
 
         if app is not None:
             self.init_app(app)
