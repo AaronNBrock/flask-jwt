@@ -27,8 +27,8 @@ CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
     'JWT_AUTH_ENDPOINT': 'jwt',
-    'JWT_AUTH_USERNAME_KEY': 'username',
-    'JWT_AUTH_PASSWORD_KEY': 'password',
+    # 'JWT_AUTH_USERNAME_KEY': 'username',
+    # 'JWT_AUTH_PASSWORD_KEY': 'password',
     'JWT_ALGORITHM': 'HS256',
     'JWT_ROLE': 'role',
     'JWT_LEEWAY': timedelta(seconds=10),
@@ -153,13 +153,23 @@ def _force_iterable(input):
     return input
 
 
-def _jwt_required(realm, roles):
+def _default_jwt_required_handler(*args, **kwargs):
     """Does the actual work of verifying the JWT data in the current request.
     This is done automatically for you by `jwt_required()` but you could call it manually.
     Doing so would be useful in the context of optional JWT access in your APIs.
 
     :param realm: an optional realm
     """
+    try:
+        realm = args[0] or kwargs['realm']
+    except IndexError:
+        realm = current_app.config['JWT_DEFAULT_REALM']
+
+    try:
+        roles = args[1] or kwargs['roles']
+    except IndexError:
+        roles = None
+
     token = _jwt.request_callback()
 
     if token is None:
@@ -198,13 +208,9 @@ def jwt_required(realm=None, roles=None):
     :param roles: an optional list of roles allowed,
                   the role is pick in JWT_ROLE field of identity
     """
-    def wrapper(fn):
-        @wraps(fn)
-        def decorator(*args, **kwargs):
-            _jwt_required(realm or current_app.config['JWT_DEFAULT_REALM'], roles)
-            return fn(*args, **kwargs)
-        return decorator
-    return wrapper
+    warnings.warn("jwt_required is deprecated. The recommended approach is "
+                  "to use jwt.jwt_required instead", DeprecationWarning, stacklevel=2)
+    return _jwt.jwt_required(realm, roles)
 
 
 class JWTError(Exception):
@@ -240,8 +246,23 @@ class JWT(object):
         self.jwt_error_callback = _default_jwt_error_handler
         self.request_callback = _default_request_handler
 
+        self.jwt_required_callback = _default_jwt_required_handler
+
         if app is not None:
             self.init_app(app)
+
+    def jwt_required(self, *args, **kwargs):
+        def wrapper(fn):
+            @wraps(fn)
+            def decorator(*fnargs, **fnkwargs):
+                self.jwt_required_callback(*args, **kwargs)
+                return fn(*fnargs, **fnkwargs)
+            return decorator
+        return wrapper
+
+    def jwt_required_handler(self, callback):
+        self.jwt_required_callback = callback
+        return callback
 
     def init_app(self, app):
         for k, v in CONFIG_DEFAULTS.items():

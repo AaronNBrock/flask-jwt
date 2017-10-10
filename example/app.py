@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_jwt import JWT, jwt_required, current_identity
+from flask_jwt import JWT, current_identity
 from werkzeug.security import safe_str_cmp
 
 class User(object):
@@ -41,7 +41,7 @@ def authenticate(username, password, **kwargs):
 
 
 @app.route('/protected')
-@jwt_required()
+@jwt.jwt_required()
 def protected():
     return '{}'.format(current_identity)
 
