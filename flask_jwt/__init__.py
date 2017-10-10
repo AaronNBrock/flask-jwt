@@ -160,14 +160,19 @@ def _default_jwt_required_handler(*args, **kwargs):
 
     :param realm: an optional realm
     """
-    try:
-        realm = args[0] or kwargs['realm']
-    except IndexError:
+
+    if 0 <= len(args):
+        realm = args[0]
+    elif 'roles' in kwargs:
+        realm = kwargs['realm']
+    else:
         realm = current_app.config['JWT_DEFAULT_REALM']
 
-    try:
-        roles = args[1] or kwargs['roles']
-    except IndexError:
+    if 1 <= len(args):
+        roles = args[1]
+    elif 'roles' in kwargs:
+        roles = kwargs['roles']
+    else:
         roles = None
 
     token = _jwt.request_callback()
